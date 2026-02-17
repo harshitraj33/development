@@ -5,6 +5,9 @@ from .models import users
 from django.contrib import messages
 
 
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 def index(request):
     myusers = users.objects.all().values()
@@ -75,6 +78,16 @@ def signup_view(request):
             new_user = SignupUser(username=username, email=email)
             new_user.set_password(password)
             new_user.save()
+            
+            # Send welcome email
+            subject = "Welcome to My Site!"
+            message = f"Hello {username},\n\nThank you for signing up! We're excited to have you on our site.\n\nBest regards,\nThe Team"
+            try:
+                send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
+            except Exception as e:
+                # Log error but don't interrupt the signup process
+                print(f"Error sending welcome email: {str(e)}")
+            
             messages.success(request, "Signup successful. You can login")
             return redirect(login_view)
     return render(request,"signup.html")
